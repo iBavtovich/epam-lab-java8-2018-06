@@ -7,7 +7,9 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
@@ -18,16 +20,26 @@ public class Exercise2 {
     public void calcAverageAgeOfEmployees() {
         List<Employee> employees = getEmployees();
 
-        Double expected = null;
+        Double expected = employees.stream()
+                                   .collect(Collectors.averagingInt(e -> e.getPerson().getAge()));
+
+        Double expected2 = employees.stream()
+                                    .mapToInt(e -> e.getPerson().getAge())
+                                    .summaryStatistics()
+                                    .getAverage();
 
         assertEquals(33.66, expected, 0.1);
+        assertEquals(33.66, expected2, 0.1);
     }
 
     @Test
     public void findPersonWithLongestFullName() {
         List<Employee> employees = getEmployees();
 
-        Person expected = null;
+        Person expected = employees.stream()
+                                   .map(Employee::getPerson)
+                                   .max(Comparator.comparingInt(p -> p.getFullName().length()))
+                                   .get();
 
         assertEquals(expected, employees.get(1).getPerson());
     }
@@ -36,7 +48,12 @@ public class Exercise2 {
     public void findEmployeeWithMaximumDurationAtOnePosition() {
         List<Employee> employees = getEmployees();
 
-        Employee expected = null;
+        Employee expected = employees.stream()
+                                     .max(Comparator.comparingInt(e -> e.getJobHistory().stream()
+                                                                        .mapToInt(JobHistoryEntry::getDuration)
+                                                                        .max()
+                                                                        .getAsInt()))
+                                     .get();
 
         assertEquals(expected, employees.get(4));
     }
@@ -50,7 +67,12 @@ public class Exercise2 {
     public void calcTotalSalaryWithCoefficientWorkExperience() {
         List<Employee> employees = getEmployees();
 
-        Double expected = null;
+        Double expected = employees.stream().mapToInt(e -> e.getJobHistory()
+                                                            .get(e.getJobHistory().size() - 1)
+                                                            .getDuration())
+                                   .mapToDouble(time -> time > 3 ? 75000 * 1.2
+                                                                 : 75000)
+                                   .sum();
 
         assertEquals(465000.0, expected, 0.001);
     }
